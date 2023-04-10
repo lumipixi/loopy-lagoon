@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Loopy Lagoon</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css"
+    />
+    <style>
+      #header {
+        padding-bottom: 0px;
+      }
+      #search-button-area {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 20px;
+      }
+      .lds-hourglass {
+        visibility: hidden;
+        /* position: absolute; */
+        width: 40px;
+        height: 40px;
+      }
+      .lds-hourglass:after {
+        content: " ";
+        display: block;
+        border-radius: 50%;
+        width: 0;
+        height: 0;
+        margin-inline: 8px;
+        box-sizing: border-box;
+        border: 21px solid var(--primary);
+        border-color: var(--primary) transparent var(--primary) transparent;
+        animation: lds-hourglass 1.2s infinite;
+      }
+      @keyframes lds-hourglass {
+        0% {
+          transform: rotate(0);
+          animation-timing-function: cubic-bezier(0.55, 0.055, 0.675, 0.19);
+        }
+        50% {
+          transform: rotate(900deg);
+          animation-timing-function: cubic-bezier(0.215, 0.61, 0.355, 1);
+        }
+        100% {
+          transform: rotate(1800deg);
+        }
+      }
+
+      #gif-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        min-height: 550px;
+        padding-block: 16px;
+      }
+
+      img {
+        min-height: 500px;
+        max-height: 520px;
+        max-width: 100%;
+      }
+
+      #gif-title {
+        text-align: center;
+      }
+
+      #title-area {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 20px;
+      }
+    </style>
+  </head>
+  <body class="container">
+    <header id="header">
+      <input
+        id="search-input"
+        type="search"
+        placeholder="Search for any GIF topic..."
+      />
+      <div id="search-button-area">
+        <a id="search-button" href="#" role="button">I'm Feeling Lucky™</a>
+      </div>
+    </header>
+    <article id="gif-container" class="container">
+      <img src="#" />
+    </article>
+    <div id="title-area">
+      <div id="gif-title"></div>
+      <span class="lds-hourglass"></span>
+    </div>
+
+    <script>
+      const api_key = "wsgsPYLQ0cyd38Y1Tmxm5ptKowmS4m9F";
+      const img = document.querySelector("img");
+      let currentSrc = img.src;
+      const gifTitle = document.querySelector("#gif-title");
+
+      let search = "cats";
+      const spinner = document.querySelector(".lds-hourglass");
+
+      img.addEventListener("load", () => {
+        console.log("image replaced!");
+        spinner.style.visibility = "hidden";
+      });
+
+      const fetchGif = () => {
+        return fetch(
+          `https://api.giphy.com/v1/gifs/translate?api_key=${api_key}&s=${search}`,
+          { mode: "cors" }
+        )
+          .then((response) => {
+            const data = response.json();
+            console.log(data);
+            return data;
+          })
+          .then((data) => {
+            return {
+              src: data.data.images.original.url,
+              title: data.data.title,
+            };
+          });
+      };
+
+      const loadGif = () => {
+        spinner.style.display = "inline-block";
+        const fetchUntilDifferent = () => {
+          fetchGif().then((newGif) => {
+            if (newGif.src === currentSrc) {
+              console.log("same src, fetching again...");
+              fetchUntilDifferent();
+            } else {
+              img.src = "";
+              img.src = newGif.src;
+              currentSrc = newGif.src;
+              gifTitle.textContent = newGif.title;
+              console.log("changed src attr");
+            }
+          });
+        };
+
+        fetchUntilDifferent();
+      };
+
+      window.onload = loadGif;
+
+      function handleSearch(event) {
+        if (event.type === "keyup" && event.key !== "Enter") {
+          return;
+        }
+        if (searchInput.value) {
+          search = searchInput.value.trim();
+        }
+        const spinner = document.querySelector(".lds-hourglass");
+        spinner.style.visibility = "visible";
+        loadGif();
+      }
+
+      const searchButton = document.querySelector("#search-button");
+      const searchInput = document.querySelector("#search-input");
+
+      searchButton.addEventListener("click", handleSearch);
+      searchInput.addEventListener("keyup", handleSearch);
+    </script>
+  </body>
+</html>
